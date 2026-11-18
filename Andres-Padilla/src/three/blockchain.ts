@@ -56,6 +56,24 @@ export class BlockchainScene {
   private lineCalm = new THREE.Color(0x8fa8ff);
   private lineAlert = new THREE.Color(CHAIN_COLORS.broken);
 
+  // Ledger real del capítulo 6
+  private ledgerBlock!: {
+    root: THREE.Group;
+    spin: THREE.Group;
+    edges: THREE.LineSegments<THREE.EdgesGeometry, THREE.LineBasicMaterial>;
+    core: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
+    label: THREE.Sprite;
+    labelCanvas: HTMLCanvasElement;
+    labelTexture: THREE.CanvasTexture;
+    link: THREE.Mesh<THREE.CylinderGeometry, THREE.MeshBasicMaterial>;
+  };
+  private ledgerInfo: { sequence: number; mine: boolean } | null = null;
+  private ledgerAppear = 0;
+  private ledgerFlash = 0;
+  private pulseT = 0;
+  private _white = new THREE.Color(0xffffff);
+  private _gold = new THREE.Color(CHAIN_COLORS.ok);
+
   constructor(private count = 5) {
     const edgesGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(SIZE, SIZE, SIZE));
     const innerGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(SIZE * 0.92, SIZE * 0.92, SIZE * 0.92));
@@ -145,6 +163,59 @@ export class BlockchainScene {
       this.links.push(link);
     }
 
+    // Bloque extra del capítulo 6: un ledger real de Testnet que se une al final de la cadena
+    {
+      const root = new THREE.Group();
+      root.position.x = (count - (count - 1) / 2) * SPACING;
+      const spin = new THREE.Group();
+      root.add(spin);
+      const cube = new THREE.Mesh(
+        new THREE.BoxGeometry(SIZE, SIZE, SIZE),
+        new THREE.MeshStandardMaterial({
+          color: 0x3a2c10,
+          emissive: 0xffc857,
+          emissiveIntensity: 0.12,
+          transparent: true,
+          opacity: 0.35,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
+      );
+      const edges = new THREE.LineSegments(
+        edgesGeo,
+        new THREE.LineBasicMaterial({ color: CHAIN_COLORS.ok, transparent: true }),
+      );
+      const core = new THREE.Mesh(
+        new THREE.SphereGeometry(0.11, 16, 12),
+        new THREE.MeshBasicMaterial({ color: 0xd2b6ff, transparent: true }),
+      );
+      spin.add(cube, edges, core);
+
+      const labelCanvas = document.createElement("canvas");
+      labelCanvas.width = 512;
+      labelCanvas.height = 160;
+      const labelTexture = new THREE.CanvasTexture(labelCanvas);
+      labelTexture.colorSpace = THREE.SRGBColorSpace;
+      const label = new THREE.Sprite(
+        new THREE.SpriteMaterial({ map: labelTexture, transparent: true, depthWrite: false }),
+      );
+      label.scale.set(1.5, 0.47, 1);
+      label.position.y = SIZE * 1.0;
+      root.add(label);
+
+      const link = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.028, 0.028, SPACING - SIZE, 10),
+        new THREE.MeshBasicMaterial({ color: CHAIN_COLORS.ok, transparent: true }),
+      );
+      link.rotation.z = Math.PI / 2;
+      link.position.x = (count - 0.5 - (count - 1) / 2) * SPACING;
+
+      root.scale.setScalar(0.0001);
+      link.scale.setScalar(0.0001);
+      this.group.add(root, link);
+      this.ledgerBlock = { root, spin, edges, core, label, labelCanvas, labelTexture, link };
+    }
+
     // Copias de la cadena en otras computadoras de la red
     for (const off of REPLICA_OFFSETS) {
       const rep = new THREE.Group();
@@ -204,9 +275,48 @@ export class BlockchainScene {
     this.hovered = index;
   }
 
+  /**
+   * Muestra al final de la cadena un ledger real de Testnet.
+   * `mine` indica que es el ledger que confirmó tu pago.
+   */
+  setLedgerBlock(info: { sequence: number; mine: boolean } | null) {
+    const prev = this.ledgerInfo;
+    if (prev?.sequence === info?.sequence && prev?.mine === info?.mine) return;
+    this.ledgerInfo = info;
+    if (info) this.ledgerFlash = 1;
+    this.drawLedgerLabel();
+  }
+
+  /** La red acaba de cerrar un ledger: un destello recorre la cadena. */
+  pulse() {
+    this.pulseT = 1;
+  }
+
+  private drawLedgerLabel() {
+    const lb = this.ledgerBlock;
+    const g = lb.labelCanvas.getContext("2d")!;
+    const c = lb.labelCanvas;
+    g.clearRect(0, 0, c.width, c.height);
+    const info = this.ledgerInfo;
+    if (info) {
+      g.textAlign = "center";
+      g.shadowColor = "rgba(255,200,87,0.9)";
+      g.shadowBlur = 14;
+      g.fillStyle = "#ffffff";
+      g.font = "600 46px system-ui, sans-serif";
+      g.fillText(`LEDGER #${info.sequence.toLocaleString("es-CR")}`, c.width / 2, 58);
+      g.font = "34px system-ui, sans-serif";
+      g.fillStyle = info.mine ? "#d2b6ff" : "#ffe3a1";
+      g.fillText(info.mine ? "✓ aquí está tu pago" : "último de Testnet", c.width / 2, 118);
+    }
+    lb.labelTexture.needsUpdate = true;
+  }
+
   update(dt: number, t: number) {
     const st = this.state;
     this.group.position.y = this.baseY + Math.sin(t * 0.8) * 0.08; // flotación muy suave
+    this.pulseT = Math.max(0, this.pulseT - dt * 1.4);
+    this.updateLedgerBlock(dt, t);
 
     this.blocks.forEach((b, i) => {
       const status = st?.status[i] ?? "ok";
@@ -222,7 +332,7 @@ export class BlockchainScene {
       b.spin.rotation.x = Math.sin(t * 0.4 + i * 1.7) * 0.08;
 
       const flicker = status === "broken" ? 0.65 + Math.sin(t * 9 + i) * 0.35 : 1;
-      b.edges.material.color.set(color);
+      b.edges.material.color.set(color).lerp(this._white, this.pulseT * 0.6);
       b.edges.material.opacity = flicker;
       b.inner.material.color.set(color);
       b.inner.material.opacity = (selected ? 0.8 : 0.4) * flicker;
@@ -259,6 +369,20 @@ export class BlockchainScene {
       const s = 0.3 * (1 + this.rejectPulse * 0.25 * Math.sin(t * 20));
       r.scale.setScalar(s);
     });
+  }
+
+  private updateLedgerBlock(dt: number, t: number) {
+    const lb = this.ledgerBlock;
+    const target = this.ledgerInfo ? 1 : 0;
+    this.ledgerAppear += (target - this.ledgerAppear) * (1 - Math.exp(-dt * 3));
+    this.ledgerFlash = Math.max(0, this.ledgerFlash - dt * 0.9);
+    const a = Math.max(this.ledgerAppear, 0.0001);
+    lb.root.scale.setScalar(a * (1 + this.ledgerFlash * 0.25 + this.pulseT * 0.08));
+    lb.link.scale.set(a, a, a);
+    lb.spin.rotation.y = t * 0.4;
+    lb.edges.material.color.copy(this._gold).lerp(this._white, Math.max(this.ledgerFlash, this.pulseT) * 0.7);
+    lb.core.visible = !!this.ledgerInfo?.mine; // tu pago, en violeta, dentro del bloque
+    lb.core.scale.setScalar(1 + Math.sin(t * 3) * 0.15);
   }
 
   private drawLabel(i: number, status: BlockStatus, hash: string) {

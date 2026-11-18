@@ -79,10 +79,11 @@ export const VIEWS = {
     minDistance: 2,
     maxDistance: 16,
   },
+  // De frente a la cadena completa, incluido el ledger real que se une al final
   ledger: {
-    camera: add(CHAIN_POS, [4.6, 2.2, 7.6]),
-    target: add(CHAIN_POS, [1.5, 0, 0]),
-    ship: add(CHAIN_POS, [4.8, 1.2, 1]),
+    camera: add(CHAIN_POS, [3.6, 1.4, 7.7]),
+    target: add(CHAIN_POS, [-0.7, 0, 0.42]),
+    ship: add(CHAIN_POS, [4.9, 1.4, -2.3]),
     minDistance: 3,
     maxDistance: 18,
   },

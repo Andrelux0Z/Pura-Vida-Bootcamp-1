@@ -11,6 +11,8 @@ import { NODE_COUNT } from "@/story/validators";
 import { useBalance, useWallet } from "@/wallet/useWallet";
 import { AccountStep, ReserveStep } from "./WalletSteps";
 import TransactionStep, { type SentTx } from "./TransactionStep";
+import LedgerStep from "./LedgerStep";
+import { useLatestLedger } from "@/wallet/useLatestLedger";
 import styles from "./Universe.module.css";
 
 export default function Universe() {
@@ -113,6 +115,15 @@ export default function Universe() {
     });
   }, [engine, dest, destBalance.balance]);
 
+  // Ledgers reales de Testnet (capítulo 6): cada uno nuevo hace destellar la cadena
+  const live = useLatestLedger(chapterId === "ledger", () => engine?.ledgerPulse());
+  const liveSeq = live.ledger?.sequence;
+  useEffect(() => {
+    if (!engine) return;
+    if (lastTx) engine.chain.setLedgerBlock({ sequence: lastTx.ledger, mine: true });
+    else if (liveSeq) engine.chain.setLedgerBlock({ sequence: liveSeq, mine: false });
+  }, [engine, lastTx, liveSeq]);
+
   // Qué se puede pulsar y qué se ve depende del capítulo
   const { setSelected } = chain;
   useEffect(() => {
@@ -199,6 +210,7 @@ export default function Universe() {
                 onSent={setLastTx}
               />
             )}
+            {chapterId === "ledger" && <LedgerStep ledger={live.ledger} error={live.error} lastTx={lastTx} />}
           </ChapterPanel>
         </>
       )}

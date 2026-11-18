@@ -228,6 +228,12 @@ export class Engine {
     this.payment.resolve(ok);
   }
 
+  /** Testnet cerró un ledger real: la cadena destella y una onda dorada recorre la galaxia. */
+  ledgerPulse() {
+    this.chain.pulse();
+    this.shockwave(new THREE.Vector3(0, 0, 0), 0xffc857);
+  }
+
   /** Se llama cada vez que la red de validadores cierra un ledger. */
   setLedgerListener(listener: (() => void) | null) {
     this.onLedger = listener;
