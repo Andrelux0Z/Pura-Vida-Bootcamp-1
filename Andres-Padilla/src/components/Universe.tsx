@@ -134,7 +134,17 @@ export default function Universe() {
     else engine.setPickTarget(null);
   }, [engine, chapterId, setSelected, toggleNode]);
 
+  // Capítulos con una tarea obligatoria: no se puede seguir sin completarla
+  const gates: Partial<Record<(typeof CHAPTERS)[number]["id"], { done: boolean; todo: string }>> = {
+    account: { done: wallet.connected, todo: "conecta tu wallet Varial." },
+    reserve: { done: typeof balance.balance === "string", todo: "tu cuenta necesita fondos." },
+    transaction: { done: lastTx !== null, todo: "envía un pago y espera a que se confirme." },
+  };
+  const firstBlocked = CHAPTERS.findIndex((c) => gates[c.id]?.done === false);
+  const maxReachable = firstBlocked === -1 ? CHAPTERS.length - 1 : firstBlocked;
+
   function goTo(index: number) {
+    if (index > maxReachable) return;
     setStarted(true);
     setChapter(index);
     engine?.setView(CHAPTERS[index].view);
@@ -178,14 +188,20 @@ export default function Universe() {
         </>
       ) : (
         <>
-          <ChapterProgress index={chapter} onGo={goTo} />
+          <ChapterProgress index={chapter} onGo={goTo} maxReachable={maxReachable} />
           {chapter === 0 && (
             <div className={styles.hero}>
               <h1>Stellar</h1>
               <p>Mueve el ratón para perturbar las estrellas · Clic para lanzar una onda · Arrastra para orbitar</p>
             </div>
           )}
-          <ChapterPanel index={chapter} onGo={goTo} attention={!started && ready}>
+          <ChapterPanel
+            index={chapter}
+            onGo={goTo}
+            maxReachable={maxReachable}
+            pending={gates[chapterId]?.todo}
+            attention={!started && ready}
+          >
             {chapterId === "blockchain" && <BlockchainLab chain={chain} />}
             {chapterId === "network" && (
               <NetworkLab

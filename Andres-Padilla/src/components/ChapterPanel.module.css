@@ -126,6 +126,18 @@
   background: rgba(80, 125, 245, 0.75);
 }
 
+.next:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: rgba(60, 100, 220, 0.35);
+}
+
+.pending {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  color: #ffcf8a;
+}
+
 .back {
   color: #cfdaff;
   background: transparent;
@@ -185,6 +197,15 @@
 
 .current {
   color: #fff;
+}
+
+.locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.locked:hover {
+  color: rgba(207, 218, 255, 0.55);
 }
 
 .current .dot {
