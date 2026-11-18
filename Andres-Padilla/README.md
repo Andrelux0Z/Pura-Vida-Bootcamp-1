@@ -16,7 +16,7 @@ Una experiencia 3D interactiva que explica los conceptos básicos de Stellar mie
 | 5 | **Enviar una transacción** | Firmas un pago en Varial. Una esfera de luz viaja de tu estrella a la de destino, escoltada por la nave, y espera en un anillo dorado hasta que la red la confirma. |
 | 6 | **Ledger y confirmación** | Ledgers reales de Testnet en vivo. El ledger que confirmó tu pago se une al final de la cadena del capítulo 1. |
 
-También puedes **pilotar la nave** libremente en cualquier momento con el botón 🚀 o la tecla **C** (W/S acelerar, A/D girar, ↑/↓ morro, Q/E rodar, Shift turbo, F onda expansiva).
+También puedes **pilotar la nave** libremente en cualquier momento con el botón "Pilotar nave" o la tecla **C** (W/S acelerar, A/D girar, ↑/↓ morro, Q/E rodar, Shift turbo, F onda expansiva).
 
 ## Requisitos
 

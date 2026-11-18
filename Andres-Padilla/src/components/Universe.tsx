@@ -172,7 +172,7 @@ export default function Universe() {
           e.currentTarget.blur();
         }}
       >
-        {piloting ? "🔭 Volver al viaje (C)" : "🚀 Pilotar nave (C)"}
+        {piloting ? "Volver al viaje (C)" : "Pilotar nave (C)"}
       </button>
 
       {piloting ? (
