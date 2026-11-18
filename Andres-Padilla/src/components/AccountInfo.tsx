@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { formatXlm, fundWithFriendbot, getXlmBalance } from "@/lib/stellar";
+import SendXlm from "./SendXlm";
 import styles from "./ConnectWallet.module.css";
 
-type Props = { address: string };
+type Props = { address: string; network: string };
 
-export default function AccountInfo({ address }: Props) {
+export default function AccountInfo({ address, network }: Props) {
   // undefined = cargando · null = cuenta sin fondos · string = saldo
   const [balance, setBalance] = useState<string | null | undefined>(undefined);
   const [error, setError] = useState("");
@@ -63,6 +64,14 @@ export default function AccountInfo({ address }: Props) {
         <button className={styles.secondary} onClick={handleFund} disabled={funding}>
           {funding ? "Pidiendo fondos…" : "Pedir 10 000 XLM de prueba"}
         </button>
+      )}
+
+      {typeof balance === "string" && (
+        <SendXlm
+          address={address}
+          network={network}
+          onSent={() => setRefresh((n) => n + 1)}
+        />
       )}
     </>
   );

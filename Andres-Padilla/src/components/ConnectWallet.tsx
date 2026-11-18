@@ -96,7 +96,7 @@ export default function ConnectWallet() {
               ⚠️ Freighter está en {network}. Cámbialo a Testnet para usar esta app.
             </small>
           )}
-          <AccountInfo key={address} address={address} />
+          <AccountInfo key={address} address={address} network={network} />
         </>
       )}
       {message && <small className={`${styles.status} ${styles.error}`}>{message}</small>}

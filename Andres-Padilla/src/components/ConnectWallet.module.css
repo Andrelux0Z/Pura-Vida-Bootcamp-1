@@ -57,6 +57,40 @@
   text-align: center;
 }
 
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  margin-top: 16px;
+}
+
+.input {
+  font: inherit;
+  font-size: 0.9rem;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.35);
+  background: transparent;
+  color: inherit;
+}
+
+.input:focus {
+  outline: 2px solid rgba(170, 59, 255, 0.5);
+  outline-offset: 1px;
+}
+
+.success {
+  color: #16a34a;
+}
+
+.success a {
+  text-decoration: underline;
+}
+
 .link {
   font: inherit;
   background: none;
