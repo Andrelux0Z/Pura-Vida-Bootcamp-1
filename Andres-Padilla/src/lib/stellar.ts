@@ -19,5 +19,19 @@ export async function getXlmBalance(address: string): Promise<string | null> {
   }
 }
 
+/**
+ * Pide a Friendbot que cree y fondee la cuenta con 10 000 XLM de prueba.
+ * Friendbot solo funciona con cuentas que todavía no existen.
+ */
+export async function fundWithFriendbot(address: string): Promise<void> {
+  const res = await fetch(
+    `https://friendbot.stellar.org?addr=${encodeURIComponent(address)}`,
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.detail ?? `Friendbot respondió ${res.status}`);
+  }
+}
+
 export const formatXlm = (amount: string) =>
   Number(amount).toLocaleString("es-CR", { maximumFractionDigits: 7 });

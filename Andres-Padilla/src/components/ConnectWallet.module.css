@@ -26,6 +26,22 @@
   cursor: wait;
 }
 
+.secondary {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(170, 59, 255, 0.5);
+  background: rgba(170, 59, 255, 0.1);
+  color: #aa3bff;
+  cursor: pointer;
+}
+
+.secondary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .status {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.8rem;

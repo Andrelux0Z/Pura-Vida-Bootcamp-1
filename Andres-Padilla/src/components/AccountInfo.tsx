@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatXlm, getXlmBalance } from "@/lib/stellar";
+import { formatXlm, fundWithFriendbot, getXlmBalance } from "@/lib/stellar";
 import styles from "./ConnectWallet.module.css";
 
 type Props = { address: string };
@@ -11,6 +11,7 @@ export default function AccountInfo({ address }: Props) {
   const [balance, setBalance] = useState<string | null | undefined>(undefined);
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
+  const [funding, setFunding] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,6 +29,19 @@ export default function AccountInfo({ address }: Props) {
     };
   }, [address, refresh]);
 
+  async function handleFund() {
+    setFunding(true);
+    setError("");
+    try {
+      await fundWithFriendbot(address);
+      setRefresh((n) => n + 1);
+    } catch (e) {
+      setError(`No se pudieron pedir fondos: ${(e as Error).message}`);
+    } finally {
+      setFunding(false);
+    }
+  }
+
   return (
     <>
       <small className={styles.status}>
@@ -44,6 +58,12 @@ export default function AccountInfo({ address }: Props) {
           Actualizar
         </button>
       </small>
+
+      {balance === null && (
+        <button className={styles.secondary} onClick={handleFund} disabled={funding}>
+          {funding ? "Pidiendo fondos…" : "Pedir 10 000 XLM de prueba"}
+        </button>
+      )}
     </>
   );
 }
