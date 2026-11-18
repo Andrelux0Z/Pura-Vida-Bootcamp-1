@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stellar Universe · Un viaje por lo básico de Stellar
 
-## Getting Started
+Entregable 1 del **Pura Vida Bootcamp** · Andrés Gabriel Padilla Robles
 
-First, run the development server:
+Una experiencia 3D interactiva que explica los conceptos básicos de Stellar mientras recorres una galaxia en nave espacial. En cada parada aprendes un concepto y, con tu propia wallet, haces algo real en la red de pruebas (**Testnet**).
+
+## El recorrido
+
+| # | Capítulo | Qué haces |
+|---|---|---|
+| 0 | **Inicio** | Vuelo de entrada sobre una galaxia de 150 000 estrellas que reaccionan al ratón. |
+| 1 | **¿Qué es una blockchain?** | Editas un bloque de una cadena de cristal y ves cómo cambia su huella (SHA-256 real) y se rompe la cadena. Si recalculas las huellas, las copias de la red siguen rechazándola. |
+| 2 | **¿Qué es Stellar?** | Doce validadores cierran un ledger cada ~5 s. Al apagar nodos y quedar por debajo de dos tercios, la red se detiene. |
+| 3 | **Tu cuenta y tus claves** | Conectas **Freighter** y nace tu estrella: la capa exterior es tu clave pública y el candado del núcleo, la secreta. |
+| 4 | **XLM y la reserva mínima** | Tu estrella está apagada hasta que pides XLM a **Friendbot**: llega un rayo de luz y se enciende. |
+| 5 | **Enviar una transacción** | Firmas un pago en Freighter. Una esfera de luz viaja de tu estrella a la de destino, escoltada por la nave, y espera en un anillo dorado hasta que la red la confirma. |
+| 6 | **Ledger y confirmación** | Ledgers reales de Testnet en vivo. El ledger que confirmó tu pago se une al final de la cadena del capítulo 1. |
+
+También puedes **pilotar la nave** libremente en cualquier momento con el botón 🚀 o la tecla **C** (W/S acelerar, A/D girar, ↑/↓ morro, Q/E rodar, Shift turbo, F onda expansiva).
+
+## Requisitos
+
+- Node.js 20 o superior.
+- La extensión **[Freighter](https://www.freighter.app/)** en el navegador, con la red cambiada a **Testnet**. Todo el dinero es de prueba.
+
+## Cómo ejecutarla
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Otros comandos:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint    # ESLint
+npm run build   # build de producción (incluye la comprobación de tipos)
+```
 
-## Learn More
+## Tecnologías
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 16** (App Router) con **TypeScript**.
+- **three.js** para la escena 3D: shader de partículas para la galaxia, post-procesado con bloom y geometría propia para la nave, los bloques y las estrellas.
+- **@stellar/freighter-api** para conectar la wallet y firmar transacciones.
+- **@stellar/stellar-sdk** para leer saldos y ledgers desde Horizon Testnet, construir pagos y enviarlos.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Estructura
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/                  # página única de Next.js
+├── components/           # interfaz: Universe (escena + capítulos) y el panel de cada capítulo
+├── lib/stellar.ts        # todo lo que habla con Stellar: saldo, Friendbot, pagos, ledgers
+├── story/                # textos de los capítulos, posiciones de la escena y modelo de la blockchain de juguete
+├── three/                # motor 3D: galaxia, nave, cadena, red de validadores, estrellas y viaje del pago
+└── wallet/               # hooks de Freighter, saldo y último ledger
+```
 
-## Deploy on Vercel
+## Notas
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- La galaxia y la nave parten de un prototipo propio en three.js, portado a TypeScript e integrado en la historia.
+- La blockchain del capítulo 1 y los validadores del capítulo 2 son simulaciones didácticas. El consenso real de Stellar (SCP) usa *quorum slices*; aquí se simplifica como "más de dos tercios". Los capítulos 3 a 6 usan la red Testnet real.
+- La "cuenta de prueba nueva" del capítulo 5 genera una dirección aleatoria cuya clave secreta se descarta: lo que reciba no se puede gastar.
