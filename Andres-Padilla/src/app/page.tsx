@@ -1,16 +1,15 @@
 import ConnectWallet from "@/components/ConnectWallet";
+import Universe from "@/components/Universe";
+import styles from "./page.module.css";
 
 export default function Home() {
   return (
-    <main
-      style={{
-        minHeight: "100svh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <ConnectWallet />
-    </main>
+    <>
+      <Universe />
+      {/* Panel temporal: la wallet se integrará en los capítulos */}
+      <aside className={styles.walletPanel}>
+        <ConnectWallet />
+      </aside>
+    </>
   );
 }
