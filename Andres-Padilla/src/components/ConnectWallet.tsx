@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isConnected, requestAccess, getAddress } from "@stellar/freighter-api";
+import {
+  isConnected,
+  requestAccess,
+  getAddress,
+  getNetwork,
+  WatchWalletChanges,
+} from "@stellar/freighter-api";
 import AccountInfo from "./AccountInfo";
 import styles from "./ConnectWallet.module.css";
 
@@ -9,6 +15,7 @@ const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-6)}`;
 
 export default function ConnectWallet() {
   const [address, setAddress] = useState("");
+  const [network, setNetwork] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,12 +26,29 @@ export default function ConnectWallet() {
       const { isConnected: hasFreighter } = await isConnected();
       if (!hasFreighter) return;
       const { address } = await getAddress();
-      if (address && !cancelled) setAddress(address);
+      if (!address) return;
+      const { network } = await getNetwork();
+      if (cancelled) return;
+      setAddress(address);
+      setNetwork(network);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // Mientras hay una wallet conectada, sigue los cambios de cuenta o de red en Freighter
+  const connected = address !== "";
+  useEffect(() => {
+    if (!connected) return;
+    const watcher = new WatchWalletChanges(2000);
+    watcher.watch(({ address, network, error }) => {
+      if (error) return;
+      if (address) setAddress(address);
+      if (network) setNetwork(network);
+    });
+    return () => watcher.stop();
+  }, [connected]);
 
   async function handleClick() {
     setMessage("");
@@ -32,6 +56,7 @@ export default function ConnectWallet() {
     // Si ya está conectada, el botón desconecta (solo limpia el estado)
     if (address) {
       setAddress("");
+      setNetwork("");
       return;
     }
 
@@ -48,7 +73,9 @@ export default function ConnectWallet() {
         setMessage("No se pudo conectar la wallet.");
         return;
       }
+      const { network } = await getNetwork();
       setAddress(access.address);
+      setNetwork(network);
     } finally {
       setLoading(false);
     }
@@ -64,6 +91,11 @@ export default function ConnectWallet() {
           <small className={styles.status} title={address}>
             Conectado: {short(address)}
           </small>
+          {network && network !== "TESTNET" && (
+            <small className={`${styles.status} ${styles.warn}`}>
+              ⚠️ Freighter está en {network}. Cámbialo a Testnet para usar esta app.
+            </small>
+          )}
           <AccountInfo key={address} address={address} />
         </>
       )}

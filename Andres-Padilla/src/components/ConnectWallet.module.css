@@ -35,6 +35,12 @@
   color: #dc2626;
 }
 
+.warn {
+  color: #d97706;
+  max-width: 320px;
+  text-align: center;
+}
+
 .link {
   font: inherit;
   background: none;
