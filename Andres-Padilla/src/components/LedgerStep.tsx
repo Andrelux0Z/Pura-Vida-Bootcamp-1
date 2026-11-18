@@ -69,7 +69,7 @@ export default function LedgerStep({ ledger, error, lastTx }: Props) {
       )}
 
       <p className={l.outro}>
-        🎉 Ya recorriste lo básico de Stellar: blockchain, validadores, cuentas, reserva,
+        Ya recorriste lo básico de Stellar: blockchain, validadores, cuentas, reserva,
         transacciones y ledgers.
       </p>
     </div>
