@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { isConnected, requestAccess, getAddress } from "@stellar/freighter-api";
+import AccountInfo from "./AccountInfo";
 import styles from "./ConnectWallet.module.css";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-6)}`;
@@ -59,9 +60,12 @@ export default function ConnectWallet() {
         {address ? "Desconectar" : loading ? "Conectando…" : "Conectar wallet"}
       </button>
       {address && (
-        <small className={styles.status} title={address}>
-          Conectado: {short(address)}
-        </small>
+        <>
+          <small className={styles.status} title={address}>
+            Conectado: {short(address)}
+          </small>
+          <AccountInfo key={address} address={address} />
+        </>
       )}
       {message && <small className={`${styles.status} ${styles.error}`}>{message}</small>}
     </div>
