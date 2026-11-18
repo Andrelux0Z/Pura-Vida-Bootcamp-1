@@ -176,11 +176,14 @@ export class Engine {
     this.view = view;
     this.shipTarget = new THREE.Vector3(...view.ship);
     if (this.piloting) return; // se aplicará al dejar de pilotar
+    const toPos = new THREE.Vector3(...view.camera);
+    const toTarget = new THREE.Vector3(...view.target);
+    this.adaptToPortrait(toPos, toTarget);
     this.tween = {
       fromPos: this.camera.position.clone(),
       fromTarget: this.controls.target.clone(),
-      toPos: new THREE.Vector3(...view.camera),
-      toTarget: new THREE.Vector3(...view.target),
+      toPos,
+      toTarget,
       t: 0,
       duration,
     };
@@ -189,6 +192,24 @@ export class Engine {
     this.controls.autoRotate = false;
     this.controls.minDistance = 0.1;
     this.controls.maxDistance = 200;
+  }
+
+  /**
+   * Las vistas están pensadas para pantallas anchas con el panel a la izquierda.
+   * En vertical (móvil) el panel va abajo: se aleja la cámara para que quepa la
+   * escena y se sube el encuadre para que quede por encima del panel.
+   */
+  private adaptToPortrait(pos: THREE.Vector3, target: THREE.Vector3) {
+    const aspect = this.camera.aspect;
+    if (aspect >= 1) return;
+    const offset = pos.clone().sub(target);
+    const dist = offset.length();
+    const k = THREE.MathUtils.clamp(0.95 / aspect, 1, 2.2);
+    offset.multiplyScalar(k);
+    // "Arriba" en pantalla, aproximado con el eje vertical del mundo
+    const lift = new THREE.Vector3(0, -dist * k * 0.28, 0);
+    target.add(lift);
+    pos.copy(target).add(offset);
   }
 
   setPiloting(on: boolean) {
@@ -429,8 +450,10 @@ export class Engine {
       const v = this.view;
       this.controls.enabled = true;
       this.controls.autoRotate = !!v?.autoRotate;
+      // En vertical la cámara se alejó más: se amplía el límite para no "saltar"
+      const far = this.camera.aspect < 1 ? THREE.MathUtils.clamp(0.95 / this.camera.aspect, 1, 2.2) : 1;
       this.controls.minDistance = v?.minDistance ?? 3;
-      this.controls.maxDistance = v?.maxDistance ?? 40;
+      this.controls.maxDistance = (v?.maxDistance ?? 40) * far;
     }
   }
 

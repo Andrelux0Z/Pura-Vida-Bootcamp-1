@@ -94,6 +94,13 @@
   background: rgba(60, 100, 220, 0.55);
 }
 
+/* Pilotar necesita teclado: en pantallas táctiles no se ofrece */
+@media (hover: none) and (pointer: coarse) {
+  .mode {
+    display: none;
+  }
+}
+
 .help {
   position: absolute;
   top: 64px;
