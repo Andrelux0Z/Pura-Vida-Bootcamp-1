@@ -7,6 +7,8 @@ import styles from "./ChapterPanel.module.css";
 type Props = {
   index: number;
   onGo: (index: number) => void;
+  /** Hace pulsar el panel y su botón para llamar la atención (hasta el primer clic). */
+  attention?: boolean;
   /** Contenido interactivo propio del capítulo. */
   children?: ReactNode;
 };
@@ -30,13 +32,13 @@ export function ChapterProgress({ index, onGo }: Pick<Props, "index" | "onGo">) 
   );
 }
 
-export default function ChapterPanel({ index, onGo, children }: Props) {
+export default function ChapterPanel({ index, onGo, attention = false, children }: Props) {
   const chapter: Chapter = CHAPTERS[index];
   const isFirst = index === 0;
   const isLast = index === CHAPTERS.length - 1;
 
   return (
-    <section className={styles.panel} key={chapter.id}>
+    <section className={`${styles.panel} ${attention ? styles.attention : ""}`} key={chapter.id}>
       <p className={styles.kicker}>{isFirst ? "Bienvenida" : `Capítulo ${index} de ${CHAPTERS.length - 1}`}</p>
       <h2 className={styles.title}>{chapter.title}</h2>
       {chapter.body.map((p) => (
@@ -53,7 +55,10 @@ export default function ChapterPanel({ index, onGo, children }: Props) {
             ← Anterior
           </button>
         )}
-        <button className={styles.next} onClick={() => onGo(isLast ? 0 : index + 1)}>
+        <button
+          className={`${styles.next} ${attention ? styles.nextAttention : ""}`}
+          onClick={() => onGo(isLast ? 0 : index + 1)}
+        >
           {isFirst ? "Empezar viaje →" : isLast ? "Volver al inicio" : "Siguiente →"}
         </button>
       </div>

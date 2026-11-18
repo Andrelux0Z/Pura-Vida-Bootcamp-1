@@ -3,10 +3,13 @@
 
 export type Vec3 = [number, number, number];
 
-/** Centro de la cadena de bloques del capítulo 1 (fuera del disco, con la galaxia de fondo). */
-export const CHAIN_POS: Vec3 = [6, 2.6, 8];
-/** Punto hacia el que mira la cadena (de frente al capítulo 1). */
-export const CHAIN_FACING: Vec3 = [6 + 3.5, 2.6, 8 + 5.9];
+/**
+ * Centro de la cadena de bloques del capítulo 1: fuera del disco y más allá
+ * de la órbita de la cámara del inicio, para que no tape la vista general.
+ */
+export const CHAIN_POS: Vec3 = [12, 3.2, 15];
+/** Punto hacia el que mira la cadena (de frente al capítulo 1, de espaldas a la galaxia). */
+export const CHAIN_FACING: Vec3 = [12 + 3.5, 3.2, 15 + 5.9];
 
 /** Tu estrella: en uno de los brazos de la galaxia. */
 export const STAR_POS: Vec3 = [4.6, 0.5, -4.4];

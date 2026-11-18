@@ -16,6 +16,8 @@ export default function Universe() {
   const [speed, setSpeed] = useState(0);
   const [turbo, setTurbo] = useState(false);
   const [chapter, setChapter] = useState(0);
+  // Hasta que se navega por primera vez, el panel pulsa para indicar dónde empezar
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
     let disposed = false;
@@ -52,6 +54,7 @@ export default function Universe() {
   }, [engine, chapterId, setSelected]);
 
   function goTo(index: number) {
+    setStarted(true);
     setChapter(index);
     engine?.setView(CHAPTERS[index].view);
   }
@@ -101,7 +104,7 @@ export default function Universe() {
               <p>Mueve el ratón para perturbar las estrellas · Clic para lanzar una onda · Arrastra para orbitar</p>
             </div>
           )}
-          <ChapterPanel index={chapter} onGo={goTo}>
+          <ChapterPanel index={chapter} onGo={goTo} attention={!started && ready}>
             {chapterId === "blockchain" && <BlockchainLab chain={chain} />}
           </ChapterPanel>
         </>
