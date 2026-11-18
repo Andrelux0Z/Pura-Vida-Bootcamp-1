@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { Engine } from "@/three/engine";
 import { CHAPTERS } from "@/story/chapters";
+import { useToyChain } from "@/story/useToyChain";
 import ChapterPanel, { ChapterProgress } from "./ChapterPanel";
+import BlockchainLab from "./BlockchainLab";
 import styles from "./Universe.module.css";
 
 export default function Universe() {
@@ -38,6 +40,16 @@ export default function Universe() {
       setEngine(null);
     };
   }, []);
+
+  const chain = useToyChain(engine);
+  const chapterId = CHAPTERS[chapter].id;
+
+  // Los bloques solo se pueden pulsar en el capítulo de blockchain
+  const { setSelected } = chain;
+  useEffect(() => {
+    if (!engine) return;
+    engine.setBlockPickHandler(chapterId === "blockchain" ? setSelected : null);
+  }, [engine, chapterId, setSelected]);
 
   function goTo(index: number) {
     setChapter(index);
@@ -89,7 +101,9 @@ export default function Universe() {
               <p>Mueve el ratón para perturbar las estrellas · Clic para lanzar una onda · Arrastra para orbitar</p>
             </div>
           )}
-          <ChapterPanel index={chapter} onGo={goTo} />
+          <ChapterPanel index={chapter} onGo={goTo}>
+            {chapterId === "blockchain" && <BlockchainLab chain={chain} />}
+          </ChapterPanel>
         </>
       )}
     </div>

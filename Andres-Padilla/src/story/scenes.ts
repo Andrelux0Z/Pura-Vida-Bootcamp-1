@@ -5,6 +5,8 @@ export type Vec3 = [number, number, number];
 
 /** Centro de la cadena de bloques del capítulo 1 (fuera del disco, con la galaxia de fondo). */
 export const CHAIN_POS: Vec3 = [6, 2.6, 8];
+/** Punto hacia el que mira la cadena (de frente al capítulo 1). */
+export const CHAIN_FACING: Vec3 = [6 + 3.5, 2.6, 8 + 5.9];
 
 /** Tu estrella: en uno de los brazos de la galaxia. */
 export const STAR_POS: Vec3 = [4.6, 0.5, -4.4];
@@ -35,9 +37,10 @@ export const VIEWS = {
     minDistance: 3,
     maxDistance: 40,
   },
+  // La cámara se desplaza a la izquierda de la cadena para que el panel de texto no la tape
   blockchain: {
-    camera: add(CHAIN_POS, [3.2, 0.9, 5.4]),
-    target: CHAIN_POS,
+    camera: add(CHAIN_POS, [3.68 - 1.38, 1.05, 6.2 + 0.82]),
+    target: add(CHAIN_POS, [-1.38, 0, 0.82]),
     ship: add(CHAIN_POS, [-3.6, 1.4, 1.2]),
     minDistance: 3,
     maxDistance: 14,

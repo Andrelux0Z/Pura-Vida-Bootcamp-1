@@ -6,7 +6,8 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createBackgroundStars, createGalaxy, type GalaxyUniforms } from "./galaxy";
 import { NO_INPUT, Ship, type ShipInput } from "./ship";
-import type { View } from "@/story/scenes";
+import { CHAIN_FACING, CHAIN_POS, type View } from "@/story/scenes";
+import { BlockchainScene } from "./blockchain";
 
 const easeInOutCubic = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
@@ -30,6 +31,10 @@ export class Engine {
   readonly scene = new THREE.Scene();
   readonly camera: THREE.PerspectiveCamera;
   readonly ship = new Ship();
+  readonly chain = new BlockchainScene();
+
+  /** Se llama cuando se pulsa un bloque de la cadena (null = bloques no pulsables). */
+  private onBlockPick: ((index: number) => void) | null = null;
 
   private renderer: THREE.WebGLRenderer;
   private composer: EffectComposer;
@@ -114,6 +119,10 @@ export class Engine {
     this.ship.group.lookAt(8, 0.8, 18);
     this.scene.add(this.ship.group, this.ship.trail);
 
+    // Cadena de bloques del capítulo 1
+    this.chain.place(new THREE.Vector3(...CHAIN_POS), new THREE.Vector3(...CHAIN_FACING));
+    this.scene.add(this.chain.group);
+
     this.resizeObserver = new ResizeObserver(this.onResize);
     this.resizeObserver.observe(container);
 
@@ -163,6 +172,15 @@ export class Engine {
     this.callbacks.onPilotChange?.(on);
   }
 
+  /** Activa (con un callback) o desactiva (con null) los clics sobre los bloques. */
+  setBlockPickHandler(handler: ((index: number) => void) | null) {
+    this.onBlockPick = handler;
+    if (!handler) {
+      this.chain.setHover(null);
+      this.renderer.domElement.style.cursor = "";
+    }
+  }
+
   togglePiloting() {
     this.setPiloting(!this.piloting);
   }
@@ -195,22 +213,36 @@ export class Engine {
 
   // ---------- Entrada ----------
 
-  private pointOnPlane(e: PointerEvent) {
+  private aim(e: PointerEvent) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.pointer.set(
       ((e.clientX - rect.left) / rect.width) * 2 - 1,
       -((e.clientY - rect.top) / rect.height) * 2 + 1,
     );
     this.raycaster.setFromCamera(this.pointer, this.camera);
+  }
+
+  private pointOnPlane() {
     const hit = new THREE.Vector3();
     return this.raycaster.ray.intersectPlane(this.plane, hit) ? hit : null;
   }
 
+  /** Índice del bloque bajo el puntero, o `null`. */
+  private pickBlock(): number | null {
+    const hit = this.raycaster.intersectObjects(this.chain.pickables, false)[0];
+    return hit ? (hit.object.userData.blockIndex as number) : null;
+  }
+
   private onPointerMove = (e: PointerEvent) => {
     if (this.piloting) return;
-    const h = this.pointOnPlane(e);
+    this.aim(e);
+    const h = this.pointOnPlane();
     this.mouseInside = !!h;
     if (h) this.mouseTarget.copy(h);
+
+    const block = this.onBlockPick ? this.pickBlock() : null;
+    this.chain.setHover(block);
+    this.renderer.domElement.style.cursor = block !== null ? "pointer" : "";
   };
 
   private onPointerLeave = () => {
@@ -225,7 +257,15 @@ export class Engine {
     if (this.piloting || !this.downAt) return;
     // Solo es "clic" si el puntero casi no se movió (si no, fue un arrastre para orbitar)
     if (Math.hypot(e.clientX - this.downAt[0], e.clientY - this.downAt[1]) > 5) return;
-    const h = this.pointOnPlane(e);
+    this.aim(e);
+    if (this.onBlockPick) {
+      const block = this.pickBlock();
+      if (block !== null) {
+        this.onBlockPick(block);
+        return;
+      }
+    }
+    const h = this.pointOnPlane();
     if (h) this.shockwave(h);
   };
 
@@ -343,6 +383,8 @@ export class Engine {
     u.uShockTime.value += dt;
     u.uMouse.value.lerp(this.mouseTarget, 0.15);
     u.uMouseStrength.value += ((this.mouseInside ? 1 : 0) - u.uMouseStrength.value) * 0.08;
+
+    this.chain.update(dt, t);
 
     const input = this.readInput();
     if (this.piloting) {
