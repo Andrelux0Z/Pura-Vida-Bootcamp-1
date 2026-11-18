@@ -71,9 +71,10 @@ export const VIEWS = {
     minDistance: 1.5,
     maxDistance: 12,
   },
+  // Cerca de las dos estrellas, desplazada para que el panel no las tape
   transaction: {
-    camera: add(mid(STAR_POS, DEST_POS), [3.4, 3.2, 5.2]),
-    target: mid(STAR_POS, DEST_POS),
+    camera: add(mid(STAR_POS, DEST_POS), [3.0 - 1.16, 3.2, 5.7 + 0.6]),
+    target: add(mid(STAR_POS, DEST_POS), [-1.16, 0, 0.6]),
     ship: add(STAR_POS, [0.6, 0.5, 0.6]),
     minDistance: 2,
     maxDistance: 16,

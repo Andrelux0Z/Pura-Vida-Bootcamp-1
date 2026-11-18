@@ -6,10 +6,11 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createBackgroundStars, createGalaxy, type GalaxyUniforms } from "./galaxy";
 import { NO_INPUT, Ship, type ShipInput } from "./ship";
-import { CHAIN_FACING, CHAIN_POS, STAR_POS, type View } from "@/story/scenes";
+import { CHAIN_FACING, CHAIN_POS, DEST_POS, STAR_POS, type View } from "@/story/scenes";
 import { BlockchainScene } from "./blockchain";
 import { NetworkScene } from "./network";
 import { AccountStar } from "./star";
+import { PaymentFlight } from "./payment";
 
 /** Algo con objetos pulsables (`userData.pickIndex`) que reacciona al hover. */
 export type Pickable = {
@@ -43,6 +44,17 @@ export class Engine {
   readonly network = new NetworkScene();
   /** Tu cuenta, representada como una estrella violeta. */
   readonly star = new AccountStar({ color: 0xb07cff, placeholder: "Aquí nacerá tu cuenta", name: "tú" });
+  /** Cuenta de destino del pago del capítulo 5, en azul. */
+  readonly dest = new AccountStar({
+    color: 0x6fd0ff,
+    placeholder: "Destino",
+    name: "destino",
+    igniteWithBeam: false,
+  });
+  readonly payment = new PaymentFlight();
+
+  /** Se llama cuando el pago llega a la estrella de destino. */
+  private onPaymentArrived: (() => void) | null = null;
 
   // Qué objetos se pueden pulsar ahora mismo (depende del capítulo)
   private pickTarget: Pickable | null = null;
@@ -82,6 +94,7 @@ export class Engine {
   private _up = new THREE.Vector3();
   private _look = new THREE.Vector3();
   private _fwd = new THREE.Vector3();
+  private _escort = new THREE.Vector3(0.5, 0.45, 0.7);
   private lastSpeedReport = -1;
   private resizeObserver: ResizeObserver;
 
@@ -143,6 +156,10 @@ export class Engine {
     this.star.setPosition(new THREE.Vector3(...STAR_POS));
     this.scene.add(this.star.group);
 
+    // Destino y viaje del pago (capítulo 5)
+    this.dest.setPosition(new THREE.Vector3(...DEST_POS));
+    this.scene.add(this.dest.group, this.payment.group);
+
     this.resizeObserver = new ResizeObserver(this.onResize);
     this.resizeObserver.observe(container);
 
@@ -198,6 +215,17 @@ export class Engine {
     this.renderer.domElement.style.cursor = "";
     this.pickTarget = target;
     this.onPick = target ? handler : null;
+  }
+
+  /** Lanza la esfera del pago desde tu estrella hacia la de destino. */
+  startPayment(onArrived: (() => void) | null = null) {
+    this.onPaymentArrived = onArrived;
+    this.payment.start(this.star.group.position, this.dest.group.position);
+  }
+
+  /** La red respondió al pago: confirma (sigue al destino) o falla (se apaga en rojo). */
+  resolvePayment(ok: boolean) {
+    this.payment.resolve(ok);
   }
 
   /** Se llama cada vez que la red de validadores cierra un ledger. */
@@ -424,6 +452,17 @@ export class Engine {
     if (starEvents.birth) this.shockwave(this.star.group.position, 0xb07cff);
     if (starEvents.ignite) this.shockwave(this.star.group.position, 0xffc857);
 
+    const destEvents = this.dest.update(dt, t, this.camera.quaternion);
+    if (destEvents.birth || destEvents.ignite) this.shockwave(this.dest.group.position, 0x6fd0ff);
+
+    const pay = this.payment.update(dt, t, this.camera.quaternion);
+    if (pay.confirmed) this.shockwave(this.payment.position, 0xffc857);
+    if (pay.arrived) {
+      this.shockwave(this.dest.group.position, 0x6fd0ff);
+      this.onPaymentArrived?.();
+      this.onPaymentArrived = null;
+    }
+
     const input = this.readInput();
     if (this.piloting) {
       this.ship.update(dt, t, input, true);
@@ -434,7 +473,11 @@ export class Engine {
         this.callbacks.onSpeed?.(speed, input.turbo);
       }
     } else {
-      if (this.shipTarget) this.ship.autopilot(dt, t, this.shipTarget);
+      if (this.payment.active) {
+        // La nave escolta el pago durante su viaje
+        this._tmp.copy(this.payment.position).add(this._escort);
+        this.ship.autopilot(dt, t, this._tmp);
+      } else if (this.shipTarget) this.ship.autopilot(dt, t, this.shipTarget);
       else this.ship.update(dt, t, NO_INPUT, false);
       this.updateTween(dt);
       this.controls.update();

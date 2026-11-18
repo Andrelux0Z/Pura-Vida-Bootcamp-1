@@ -10,6 +10,7 @@ import NetworkLab from "./NetworkLab";
 import { NODE_COUNT } from "@/story/validators";
 import { useBalance, useWallet } from "@/wallet/useWallet";
 import { AccountStep, ReserveStep } from "./WalletSteps";
+import TransactionStep, { type SentTx } from "./TransactionStep";
 import styles from "./Universe.module.css";
 
 export default function Universe() {
@@ -22,6 +23,11 @@ export default function Universe() {
   const [chapter, setChapter] = useState(0);
   // Hasta que se navega por primera vez, el panel pulsa para indicar dónde empezar
   const [started, setStarted] = useState(false);
+  // El motor tarda en cargar: al arrancar vuela al capítulo en el que ya esté la interfaz
+  const chapterRef = useRef(0);
+  useEffect(() => {
+    chapterRef.current = chapter;
+  }, [chapter]);
 
   useEffect(() => {
     let disposed = false;
@@ -36,7 +42,7 @@ export default function Universe() {
           setTurbo(t);
         },
       });
-      instance.setView(CHAPTERS[0].view, 4); // vuelo de entrada      setEngine(instance);
+      setEngine(instance);
       requestAnimationFrame(() => setReady(true));
     });
     return () => {
@@ -45,6 +51,11 @@ export default function Universe() {
       setEngine(null);
     };
   }, []);
+
+  // Vuelo de entrada, hacia el capítulo actual (normalmente el inicio)
+  useEffect(() => {
+    engine?.setView(CHAPTERS[chapterRef.current].view, 4);
+  }, [engine]);
 
   const chain = useToyChain(engine);
   const chapterId = CHAPTERS[chapter].id;
@@ -86,6 +97,21 @@ export default function Universe() {
       address: wallet.address,
     });
   }, [engine, wallet.connected, wallet.address, balance.balance]);
+
+  // Destino del pago y última transacción enviada (capítulos 5 y 6)
+  const [dest, setDest] = useState("");
+  const destBalance = useBalance(dest);
+  const [lastTx, setLastTx] = useState<SentTx | null>(null);
+  useEffect(() => {
+    if (!engine) return;
+    const b = destBalance.balance;
+    engine.dest.setState({
+      connected: dest !== "",
+      funded: b === undefined ? undefined : b !== null,
+      balance: Number(b ?? 0),
+      address: dest,
+    });
+  }, [engine, dest, destBalance.balance]);
 
   // Qué se puede pulsar y qué se ve depende del capítulo
   const { setSelected } = chain;
@@ -161,6 +187,18 @@ export default function Universe() {
             )}
             {chapterId === "account" && <AccountStep wallet={wallet} />}
             {chapterId === "reserve" && <ReserveStep wallet={wallet} balance={balance} />}
+            {chapterId === "transaction" && (
+              <TransactionStep
+                engine={engine}
+                wallet={wallet}
+                balance={balance}
+                dest={dest}
+                setDest={setDest}
+                destBalance={destBalance}
+                lastTx={lastTx}
+                onSent={setLastTx}
+              />
+            )}
           </ChapterPanel>
         </>
       )}

@@ -88,8 +88,12 @@ export class AccountStar {
   private pendingIgnite = false;
   private _c = new THREE.Color();
 
-  constructor(opts: { color: number; placeholder: string; name: string }) {
+  /** Si se enciende con el rayo de Friendbot (tu cuenta) o directamente (el destino del pago). */
+  private igniteWithBeam: boolean;
+
+  constructor(opts: { color: number; placeholder: string; name: string; igniteWithBeam?: boolean }) {
     this.color = new THREE.Color(opts.color);
+    this.igniteWithBeam = opts.igniteWithBeam ?? true;
     const tex = radialTexture();
 
     this.core = new THREE.Mesh(
@@ -207,7 +211,13 @@ export class AccountStar {
     }
     if (this.pendingIgnite) {
       this.pendingIgnite = false;
-      this.beamT = 0;
+      if (this.igniteWithBeam) {
+        this.beamT = 0;
+      } else {
+        // El pago ya llegó: se enciende al instante con un destello
+        this.burstT = 0;
+        events.ignite = true;
+      }
     }
 
     const k = (rate: number) => 1 - Math.exp(-dt * rate);

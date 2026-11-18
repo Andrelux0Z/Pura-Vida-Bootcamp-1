@@ -2,6 +2,7 @@ import {
   Asset,
   BASE_FEE,
   Horizon,
+  Keypair,
   Memo,
   Networks,
   NotFoundError,
@@ -17,6 +18,32 @@ export const server = new Horizon.Server(HORIZON_URL);
 
 export const txExplorerUrl = (hash: string) =>
   `https://stellar.expert/explorer/testnet/tx/${hash}`;
+
+export const ledgerExplorerUrl = (sequence: number) =>
+  `https://stellar.expert/explorer/testnet/ledger/${sequence}`;
+
+/**
+ * Dirección pública nueva y aleatoria, para enviarle un pago de prueba.
+ * Su clave secreta se descarta: nadie podrá gastar lo que reciba.
+ */
+export const randomTestAddress = () => Keypair.random().publicKey();
+
+export type LedgerInfo = {
+  sequence: number;
+  closedAt: string;
+  txCount: number;
+};
+
+/** El último ledger cerrado por la red. */
+export async function getLatestLedger(): Promise<LedgerInfo> {
+  const page = await server.ledgers().order("desc").limit(1).call();
+  const l = page.records[0];
+  return {
+    sequence: l.sequence,
+    closedAt: l.closed_at,
+    txCount: l.successful_transaction_count,
+  };
+}
 
 /**
  * Devuelve el saldo de XLM de una cuenta.
@@ -99,11 +126,11 @@ export async function buildPaymentXdr(
   return builder.build().toXDR();
 }
 
-/** Envía a la red una transacción ya firmada y devuelve su hash. */
-export async function submitSignedXdr(signedXdr: string): Promise<string> {
+/** Envía a la red una transacción ya firmada. Devuelve su hash y el ledger que la confirmó. */
+export async function submitSignedXdr(signedXdr: string): Promise<{ hash: string; ledger: number }> {
   const tx = TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE);
   const result = await server.submitTransaction(tx);
-  return result.hash;
+  return { hash: result.hash, ledger: result.ledger };
 }
 
 const RESULT_MESSAGES: Record<string, string> = {
