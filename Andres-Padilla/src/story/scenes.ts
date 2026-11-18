@@ -48,9 +48,10 @@ export const VIEWS = {
     minDistance: 3,
     maxDistance: 14,
   },
+  // Desplazada a la izquierda para que la red quede a la derecha del panel
   network: {
-    camera: [0, 15, 13],
-    target: [0, 0, 0],
+    camera: [-3.8, 15.5, 14],
+    target: [-3.8, 0, 0],
     ship: [-4, 3, 9],
     autoRotate: true,
     minDistance: 6,

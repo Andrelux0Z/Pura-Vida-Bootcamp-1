@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Engine } from "@/three/engine";
 import { CHAPTERS } from "@/story/chapters";
 import { useToyChain } from "@/story/useToyChain";
 import ChapterPanel, { ChapterProgress } from "./ChapterPanel";
 import BlockchainLab from "./BlockchainLab";
+import NetworkLab from "./NetworkLab";
+import { NODE_COUNT } from "@/story/validators";
 import styles from "./Universe.module.css";
 
 export default function Universe() {
@@ -46,12 +48,39 @@ export default function Universe() {
   const chain = useToyChain(engine);
   const chapterId = CHAPTERS[chapter].id;
 
-  // Los bloques solo se pueden pulsar en el capítulo de blockchain
+  // Red de validadores (capítulo 2)
+  const [nodesActive, setNodesActive] = useState<boolean[]>(() => Array(NODE_COUNT).fill(true));
+  const [selectedNode, setSelectedNode] = useState<number | null>(null);
+  const [ledgers, setLedgers] = useState(0);
+
+  const toggleNode = useCallback((i: number) => {
+    setSelectedNode(i);
+    setNodesActive((prev) => prev.map((on, k) => (k === i ? !on : on)));
+  }, []);
+
+  useEffect(() => {
+    engine?.network.setActive(nodesActive);
+  }, [engine, nodesActive]);
+
+  useEffect(() => {
+    engine?.network.setSelected(selectedNode);
+  }, [engine, selectedNode]);
+
+  useEffect(() => {
+    if (!engine) return;
+    engine.setLedgerListener(() => setLedgers((n) => n + 1));
+    return () => engine.setLedgerListener(null);
+  }, [engine]);
+
+  // Qué se puede pulsar y qué se ve depende del capítulo
   const { setSelected } = chain;
   useEffect(() => {
     if (!engine) return;
-    engine.setBlockPickHandler(chapterId === "blockchain" ? setSelected : null);
-  }, [engine, chapterId, setSelected]);
+    engine.network.setVisible(chapterId === "network");
+    if (chapterId === "blockchain") engine.setPickTarget(engine.chain, setSelected);
+    else if (chapterId === "network") engine.setPickTarget(engine.network, toggleNode);
+    else engine.setPickTarget(null);
+  }, [engine, chapterId, setSelected, toggleNode]);
 
   function goTo(index: number) {
     setStarted(true);
@@ -106,6 +135,15 @@ export default function Universe() {
           )}
           <ChapterPanel index={chapter} onGo={goTo} attention={!started && ready}>
             {chapterId === "blockchain" && <BlockchainLab chain={chain} />}
+            {chapterId === "network" && (
+              <NetworkLab
+                active={nodesActive}
+                selected={selectedNode}
+                ledgers={ledgers}
+                onToggle={toggleNode}
+                onReset={() => setNodesActive(Array(NODE_COUNT).fill(true))}
+              />
+            )}
           </ChapterPanel>
         </>
       )}

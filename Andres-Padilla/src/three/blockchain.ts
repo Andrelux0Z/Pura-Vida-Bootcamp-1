@@ -42,7 +42,7 @@ export type ChainState = {
 
 export class BlockchainScene {
   readonly group = new THREE.Group();
-  /** Mallas que se pueden pulsar; `userData.blockIndex` dice qué bloque es. */
+  /** Mallas que se pueden pulsar; `userData.pickIndex` dice qué bloque es. */
   readonly pickables: THREE.Object3D[] = [];
 
   private blocks: BlockView[] = [];
@@ -79,7 +79,7 @@ export class BlockchainScene {
           side: THREE.DoubleSide,
         }),
       );
-      cube.userData.blockIndex = i;
+      cube.userData.pickIndex = i;
       spin.add(cube);
       this.pickables.push(cube);
 
