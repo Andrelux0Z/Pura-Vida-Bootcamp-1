@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { formatXlm } from "@/lib/stellar";
-import type { Balance, Wallet } from "@/wallet/useWallet";
+import { VARIAL_URL, type Balance, type Wallet } from "@/wallet/useWallet";
 import styles from "./WalletSteps.module.css";
 
 function NetworkWarning({ network }: { network: string }) {
   if (!network || network === "TESTNET") return null;
   return (
     <p className={styles.warn}>
-      ⚠️ Freighter está en <b>{network}</b>. Cámbiala a <b>Testnet</b> en sus ajustes: este viaje usa
+      ⚠️ Varial está en <b>{network}</b>. Cámbiala a <b>Testnet</b> en sus ajustes: este viaje usa
       la red de pruebas, con dinero que no es real.
     </p>
   );
@@ -19,12 +19,12 @@ function ConnectButton({ wallet }: { wallet: Wallet }) {
   return (
     <>
       <button className={styles.primary} onClick={wallet.connect} disabled={wallet.connecting}>
-        {wallet.connecting ? "Conectando…" : "Conectar Freighter"}
+        {wallet.connecting ? "Conectando…" : "Conectar Varial"}
       </button>
       {wallet.missing && (
         <p className={styles.error}>
-          No encontramos Freighter.{" "}
-          <a href="https://www.freighter.app/" target="_blank" rel="noreferrer">
+          No encontramos Varial (antes Freighter).{" "}
+          <a href={VARIAL_URL} target="_blank" rel="noreferrer">
             Instálala
           </a>
           , crea una cuenta y recarga la página.
@@ -76,7 +76,7 @@ export function AccountStep({ wallet }: { wallet: Wallet }) {
           <span>🔒 Clave secreta</span>
         </div>
         <code className={styles.address}>S•••••••••••••••••••••••••••••••</code>
-        <small>Freighter la guarda cifrada. Ninguna app, tampoco esta, puede verla.</small>
+        <small>Varial la guarda cifrada. Ninguna app, tampoco esta, puede verla.</small>
       </div>
 
       <NetworkWarning network={wallet.network} />

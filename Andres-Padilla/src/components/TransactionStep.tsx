@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { signTransaction } from "@stellar/freighter-api";
+import { signTransaction } from "@stellar/varial-sdk";
 import {
   NETWORK_PASSPHRASE,
   buildPaymentXdr,
@@ -23,7 +23,7 @@ type Phase = "idle" | "building" | "signing" | "sending" | "done";
 
 const STEPS: { id: Exclude<Phase, "idle">; label: string }[] = [
   { id: "building", label: "Construir la transacción" },
-  { id: "signing", label: "Firmarla en Freighter" },
+  { id: "signing", label: "Firmarla en Varial" },
   { id: "sending", label: "Confirmarla en un ledger" },
   { id: "done", label: "Llegada al destino" },
 ];
@@ -104,7 +104,7 @@ export default function TransactionStep({
         address: wallet.address,
       });
       if (signed.error) {
-        setError("La firma fue cancelada o falló en Freighter.");
+        setError("La firma fue cancelada o falló en Varial.");
         setPhase("idle");
         return;
       }
@@ -189,7 +189,7 @@ export default function TransactionStep({
       <button className={styles.primary} type="submit" disabled={busy || wrongNetwork}>
         {busy ? "Enviando…" : "Firmar y enviar"}
       </button>
-      {wrongNetwork && <p className={styles.warn}>⚠️ Cambia Freighter a Testnet para enviar.</p>}
+      {wrongNetwork && <p className={styles.warn}>⚠️ Cambia Varial a Testnet para enviar.</p>}
 
       {phase !== "idle" && (
         <ol className={tx.steps}>

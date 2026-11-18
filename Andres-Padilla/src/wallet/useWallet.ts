@@ -2,15 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  disconnect as disconnectWallet,
   getAddress,
   getNetwork,
   isConnected,
   requestAccess,
   WatchWalletChanges,
-} from "@stellar/freighter-api";
+} from "@stellar/varial-sdk";
 import { fundWithFriendbot, getXlmBalance } from "@/lib/stellar";
 
-/** Conexión con Freighter: dirección, red y cambios en vivo. */
+/** Enlace para instalar Varial (antes Freighter). */
+export const VARIAL_URL = "https://varialwallet.com/";
+
+/** Conexión con Varial: dirección, red y cambios en vivo. */
 export function useWallet() {
   const [address, setAddress] = useState("");
   const [network, setNetwork] = useState("");
@@ -22,8 +26,8 @@ export function useWallet() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { isConnected: hasFreighter } = await isConnected();
-      if (!hasFreighter) return;
+      const { isConnected: hasWallet } = await isConnected();
+      if (!hasWallet) return;
       const { address } = await getAddress();
       if (!address) return;
       const { network } = await getNetwork();
@@ -36,7 +40,7 @@ export function useWallet() {
     };
   }, []);
 
-  // Mientras hay una wallet conectada, sigue los cambios de cuenta o de red en Freighter
+  // Mientras hay una wallet conectada, sigue los cambios de cuenta o de red en Varial
   const connected = address !== "";
   useEffect(() => {
     if (!connected) return;
@@ -54,12 +58,12 @@ export function useWallet() {
     setMissing(false);
     setConnecting(true);
     try {
-      const { isConnected: hasFreighter } = await isConnected();
-      if (!hasFreighter) {
+      const { isConnected: hasWallet } = await isConnected();
+      if (!hasWallet) {
         setMissing(true);
         return;
       }
-      // Abre el popup de Freighter para autorizar la app
+      // Abre el popup de Varial para autorizar la app
       const access = await requestAccess();
       if (access.error) {
         setError("No se pudo conectar la wallet.");
@@ -73,8 +77,9 @@ export function useWallet() {
     }
   }, []);
 
-  // Freighter no tiene "desconectar": solo limpiamos el estado de la app
-  const disconnect = useCallback(() => {
+  // Revoca el permiso en Varial y limpia el estado de la app
+  const disconnect = useCallback(async () => {
+    await disconnectWallet().catch(() => undefined);
     setAddress("");
     setNetwork("");
   }, []);

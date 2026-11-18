@@ -55,7 +55,7 @@ export const CHAPTERS: Chapter[] = [
     title: "Tu cuenta y tus claves",
     body: [
       "En Stellar, una cuenta es un par de claves. La clave pública (empieza con G) es tu dirección: puedes compartirla para recibir dinero.",
-      "La clave secreta firma tus transacciones y nunca debe salir de tu wallet. Freighter la guarda por ti.",
+      "La clave secreta firma tus transacciones y nunca debe salir de tu wallet. Varial la guarda por ti.",
     ],
     view: VIEWS.account,
   },

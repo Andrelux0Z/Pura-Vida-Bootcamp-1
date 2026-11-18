@@ -100,7 +100,7 @@ export function validatePayment(
 /**
  * Construye (sin firmar) una transacción que envía XLM de `from` a `to`.
  * Si la cuenta destino aún no existe, la crea con ese monto (mínimo 1 XLM).
- * Devuelve la transacción en formato XDR para firmarla con Freighter.
+ * Devuelve la transacción en formato XDR para firmarla con Varial.
  */
 export async function buildPaymentXdr(
   from: string,

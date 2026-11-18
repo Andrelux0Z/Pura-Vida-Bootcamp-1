@@ -9,8 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@stellar/freighter-api": "^6.0.1",
     "@stellar/stellar-sdk": "^17.4.0",
+    "@stellar/varial-sdk": "^7.0.0",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",

@@ -11,9 +11,9 @@ Una experiencia 3D interactiva que explica los conceptos básicos de Stellar mie
 | 0 | **Inicio** | Vuelo de entrada sobre una galaxia de 150 000 estrellas que reaccionan al ratón. |
 | 1 | **¿Qué es una blockchain?** | Editas un bloque de una cadena de cristal y ves cómo cambia su huella (SHA-256 real) y se rompe la cadena. Si recalculas las huellas, las copias de la red siguen rechazándola. |
 | 2 | **¿Qué es Stellar?** | Doce validadores cierran un ledger cada ~5 s. Al apagar nodos y quedar por debajo de dos tercios, la red se detiene. |
-| 3 | **Tu cuenta y tus claves** | Conectas **Freighter** y nace tu estrella: la capa exterior es tu clave pública y el candado del núcleo, la secreta. |
+| 3 | **Tu cuenta y tus claves** | Conectas **Varial** y nace tu estrella: la capa exterior es tu clave pública y el candado del núcleo, la secreta. |
 | 4 | **XLM y la reserva mínima** | Tu estrella está apagada hasta que pides XLM a **Friendbot**: llega un rayo de luz y se enciende. |
-| 5 | **Enviar una transacción** | Firmas un pago en Freighter. Una esfera de luz viaja de tu estrella a la de destino, escoltada por la nave, y espera en un anillo dorado hasta que la red la confirma. |
+| 5 | **Enviar una transacción** | Firmas un pago en Varial. Una esfera de luz viaja de tu estrella a la de destino, escoltada por la nave, y espera en un anillo dorado hasta que la red la confirma. |
 | 6 | **Ledger y confirmación** | Ledgers reales de Testnet en vivo. El ledger que confirmó tu pago se une al final de la cadena del capítulo 1. |
 
 También puedes **pilotar la nave** libremente en cualquier momento con el botón 🚀 o la tecla **C** (W/S acelerar, A/D girar, ↑/↓ morro, Q/E rodar, Shift turbo, F onda expansiva).
@@ -21,7 +21,7 @@ También puedes **pilotar la nave** libremente en cualquier momento con el botó
 ## Requisitos
 
 - Node.js 20 o superior.
-- La extensión **[Freighter](https://www.freighter.app/)** en el navegador, con la red cambiada a **Testnet**. Todo el dinero es de prueba.
+- La extensión **[Varial](https://varialwallet.com/)** (antes Freighter) en el navegador, con la red cambiada a **Testnet**. Todo el dinero es de prueba.
 
 ## Cómo ejecutarla
 
@@ -43,7 +43,7 @@ npm run build   # build de producción (incluye la comprobación de tipos)
 
 - **Next.js 16** (App Router) con **TypeScript**.
 - **three.js** para la escena 3D: shader de partículas para la galaxia, post-procesado con bloom y geometría propia para la nave, los bloques y las estrellas.
-- **@stellar/freighter-api** para conectar la wallet y firmar transacciones.
+- **@stellar/varial-sdk** (antes `@stellar/freighter-api`) para conectar la wallet y firmar transacciones.
 - **@stellar/stellar-sdk** para leer saldos y ledgers desde Horizon Testnet, construir pagos y enviarlos.
 
 ## Estructura
@@ -55,7 +55,7 @@ src/
 ├── lib/stellar.ts        # todo lo que habla con Stellar: saldo, Friendbot, pagos, ledgers
 ├── story/                # textos de los capítulos, posiciones de la escena y modelo de la blockchain de juguete
 ├── three/                # motor 3D: galaxia, nave, cadena, red de validadores, estrellas y viaje del pago
-└── wallet/               # hooks de Freighter, saldo y último ledger
+└── wallet/               # hooks de Varial, saldo y último ledger
 ```
 
 ## Notas
