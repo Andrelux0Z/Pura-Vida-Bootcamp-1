@@ -6,9 +6,10 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createBackgroundStars, createGalaxy, type GalaxyUniforms } from "./galaxy";
 import { NO_INPUT, Ship, type ShipInput } from "./ship";
-import { CHAIN_FACING, CHAIN_POS, type View } from "@/story/scenes";
+import { CHAIN_FACING, CHAIN_POS, STAR_POS, type View } from "@/story/scenes";
 import { BlockchainScene } from "./blockchain";
 import { NetworkScene } from "./network";
+import { AccountStar } from "./star";
 
 /** Algo con objetos pulsables (`userData.pickIndex`) que reacciona al hover. */
 export type Pickable = {
@@ -40,6 +41,8 @@ export class Engine {
   readonly ship = new Ship();
   readonly chain = new BlockchainScene();
   readonly network = new NetworkScene();
+  /** Tu cuenta, representada como una estrella violeta. */
+  readonly star = new AccountStar({ color: 0xb07cff, placeholder: "Aquí nacerá tu cuenta", name: "tú" });
 
   // Qué objetos se pueden pulsar ahora mismo (depende del capítulo)
   private pickTarget: Pickable | null = null;
@@ -135,6 +138,10 @@ export class Engine {
 
     // Red de validadores del capítulo 2
     this.scene.add(this.network.group);
+
+    // Tu estrella (capítulos 3 a 5)
+    this.star.setPosition(new THREE.Vector3(...STAR_POS));
+    this.scene.add(this.star.group);
 
     this.resizeObserver = new ResizeObserver(this.onResize);
     this.resizeObserver.observe(container);
@@ -411,6 +418,11 @@ export class Engine {
       this.shockwave(new THREE.Vector3(0, 0, 0), 0xffc857);
       this.onLedger?.();
     }
+
+    const starEvents = this.star.update(dt, t, this.camera.quaternion);
+    // Nace tu cuenta (violeta) o se enciende al recibir fondos (dorado): la galaxia lo nota
+    if (starEvents.birth) this.shockwave(this.star.group.position, 0xb07cff);
+    if (starEvents.ignite) this.shockwave(this.star.group.position, 0xffc857);
 
     const input = this.readInput();
     if (this.piloting) {

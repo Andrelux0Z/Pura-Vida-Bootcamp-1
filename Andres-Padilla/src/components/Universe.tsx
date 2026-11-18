@@ -8,6 +8,8 @@ import ChapterPanel, { ChapterProgress } from "./ChapterPanel";
 import BlockchainLab from "./BlockchainLab";
 import NetworkLab from "./NetworkLab";
 import { NODE_COUNT } from "@/story/validators";
+import { useBalance, useWallet } from "@/wallet/useWallet";
+import { AccountStep, ReserveStep } from "./WalletSteps";
 import styles from "./Universe.module.css";
 
 export default function Universe() {
@@ -34,8 +36,7 @@ export default function Universe() {
           setTurbo(t);
         },
       });
-      instance.setView(CHAPTERS[0].view, 4); // vuelo de entrada
-      setEngine(instance);
+      instance.setView(CHAPTERS[0].view, 4); // vuelo de entrada      setEngine(instance);
       requestAnimationFrame(() => setReady(true));
     });
     return () => {
@@ -71,6 +72,20 @@ export default function Universe() {
     engine.setLedgerListener(() => setLedgers((n) => n + 1));
     return () => engine.setLedgerListener(null);
   }, [engine]);
+
+  // Tu wallet y tu estrella (capítulos 3 a 5)
+  const wallet = useWallet();
+  const balance = useBalance(wallet.address);
+  useEffect(() => {
+    if (!engine) return;
+    const b = balance.balance;
+    engine.star.setState({
+      connected: wallet.connected,
+      funded: b === undefined ? undefined : b !== null,
+      balance: Number(b ?? 0),
+      address: wallet.address,
+    });
+  }, [engine, wallet.connected, wallet.address, balance.balance]);
 
   // Qué se puede pulsar y qué se ve depende del capítulo
   const { setSelected } = chain;
@@ -144,6 +159,8 @@ export default function Universe() {
                 onReset={() => setNodesActive(Array(NODE_COUNT).fill(true))}
               />
             )}
+            {chapterId === "account" && <AccountStep wallet={wallet} />}
+            {chapterId === "reserve" && <ReserveStep wallet={wallet} balance={balance} />}
           </ChapterPanel>
         </>
       )}

@@ -60,7 +60,7 @@ export const VIEWS = {
   account: {
     camera: add(STAR_POS, [1.4, 1.1, 3.6]),
     target: STAR_POS,
-    ship: add(STAR_POS, [-1.6, 0.6, 1.4]),
+    ship: add(STAR_POS, [1.9, 0.7, 1.0]),
     minDistance: 1.5,
     maxDistance: 12,
   },
