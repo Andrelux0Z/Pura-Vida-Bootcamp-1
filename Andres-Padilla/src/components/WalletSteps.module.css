@@ -53,6 +53,12 @@
   cursor: pointer;
 }
 
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
 .key {
   display: flex;
   flex-direction: column;

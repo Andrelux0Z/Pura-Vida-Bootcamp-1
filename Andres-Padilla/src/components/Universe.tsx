@@ -100,6 +100,15 @@ export default function Universe() {
     });
   }, [engine, wallet.connected, wallet.address, balance.balance]);
 
+  // Si la cuenta ya tenía XLM, al llegar al capítulo 4 se repite la llegada de los
+  // fondos (cuando la cámara termina su viaje) para no saltarse la escena
+  const alreadyFunded = typeof balance.balance === "string" && !balance.fundedHere;
+  useEffect(() => {
+    if (!engine || chapterId !== "reserve" || !alreadyFunded) return;
+    const id = setTimeout(() => engine.star.replayFunding(), 2800);
+    return () => clearTimeout(id);
+  }, [engine, chapterId, alreadyFunded]);
+
   // Destino del pago y última transacción enviada (capítulos 5 y 6)
   const [dest, setDest] = useState("");
   const destBalance = useBalance(dest);
@@ -213,7 +222,13 @@ export default function Universe() {
               />
             )}
             {chapterId === "account" && <AccountStep wallet={wallet} />}
-            {chapterId === "reserve" && <ReserveStep wallet={wallet} balance={balance} />}
+            {chapterId === "reserve" && (
+              <ReserveStep
+                wallet={wallet}
+                balance={balance}
+                onReplay={() => engine?.star.replayFunding()}
+              />
+            )}
             {chapterId === "transaction" && (
               <TransactionStep
                 engine={engine}

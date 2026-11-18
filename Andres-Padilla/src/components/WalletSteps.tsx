@@ -88,7 +88,16 @@ export function AccountStep({ wallet }: { wallet: Wallet }) {
 }
 
 /** Capítulo 4: la reserva mínima y Friendbot. */
-export function ReserveStep({ wallet, balance }: { wallet: Wallet; balance: Balance }) {
+export function ReserveStep({
+  wallet,
+  balance,
+  onReplay,
+}: {
+  wallet: Wallet;
+  balance: Balance;
+  /** Repite en la galaxia la llegada de los fondos. */
+  onReplay: () => void;
+}) {
   if (!wallet.connected) {
     return (
       <div className={styles.box}>
@@ -120,13 +129,28 @@ export function ReserveStep({ wallet, balance }: { wallet: Wallet; balance: Bala
           <p className={styles.balance}>
             {formatXlm(b)} <span>XLM</span>
           </p>
+          {balance.fundedHere ? (
+            <p className={styles.lead}>
+              Friendbot te envió XLM y tu cuenta <b>ya existe en la red</b>.
+            </p>
+          ) : (
+            <p className={styles.lead}>
+              Tu cuenta <b>ya tenía XLM</b>, así que ya existe en la red. Friendbot solo da fondos a
+              cuentas que todavía no existen, por eso aquí no hace falta pedírselos.
+            </p>
+          )}
           <p className={styles.lead}>
-            Tu cuenta existe en la red. De ese saldo, <b>1 XLM queda reservado</b> mientras la cuenta
-            exista; el resto lo puedes enviar.
+            De ese saldo, <b>1 XLM queda reservado</b> mientras la cuenta exista; el resto lo puedes
+            enviar.
           </p>
-          <button className={styles.link} onClick={balance.refresh}>
-            Actualizar saldo
-          </button>
+          <div className={styles.row}>
+            <button className={styles.link} onClick={onReplay}>
+              Ver otra vez cómo llegan los fondos
+            </button>
+            <button className={styles.link} onClick={balance.refresh}>
+              Actualizar saldo
+            </button>
+          </div>
         </>
       )}
 

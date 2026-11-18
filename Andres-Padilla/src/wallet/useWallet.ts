@@ -95,6 +95,8 @@ export function useBalance(address: string) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [funding, setFunding] = useState(false);
   const [loadedFor, setLoadedFor] = useState("");
+  // Cuenta que recibió fondos de Friendbot durante este viaje (si no, ya los tenía)
+  const [fundedFor, setFundedFor] = useState("");
 
   useEffect(() => {
     if (!address) return;
@@ -121,6 +123,7 @@ export function useBalance(address: string) {
     setError("");
     try {
       await fundWithFriendbot(address);
+      setFundedFor(address);
       setRefreshKey((n) => n + 1);
     } catch (e) {
       setError(`No se pudieron pedir fondos: ${(e as Error).message}`);
@@ -131,7 +134,8 @@ export function useBalance(address: string) {
 
   // Si el saldo cargado es de otra cuenta, todavía no sabemos el de esta
   const current = address && loadedFor === address ? balance : undefined;
-  return { balance: current, error, funding, refresh, fund };
+  const fundedHere = address !== "" && fundedFor === address;
+  return { balance: current, error, funding, fundedHere, refresh, fund };
 }
 
 export type Wallet = ReturnType<typeof useWallet>;

@@ -187,6 +187,16 @@ export class AccountStar {
     this.group.userData.name = opts.name;
   }
 
+  /**
+   * Repite la llegada de los fondos: la estrella se apaga, llega el rayo y se
+   * enciende de nuevo. Sirve cuando la cuenta ya tenía XLM antes del viaje.
+   */
+  replayFunding() {
+    if (!this.state.connected || this.state.funded !== true || !this.igniteWithBeam) return;
+    this.beamT = 0;
+    this.glow = 0;
+  }
+
   setPosition(p: THREE.Vector3) {
     this.group.position.copy(p);
   }
