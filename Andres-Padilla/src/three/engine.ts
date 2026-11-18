@@ -6,6 +6,9 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { createBackgroundStars, createGalaxy, type GalaxyUniforms } from "./galaxy";
 import { NO_INPUT, Ship, type ShipInput } from "./ship";
+import type { View } from "@/story/scenes";
+
+const easeInOutCubic = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
 export type EngineCallbacks = {
   onPilotChange?: (piloting: boolean) => void;
@@ -37,9 +40,18 @@ export class Engine {
 
   private piloting = false;
   private keys: Record<string, boolean> = {};
-  private intro = 0;
-  private camStart = new THREE.Vector3(0, 40, 60);
-  private camEnd = new THREE.Vector3(0, 7, 14);
+
+  // Transición de cámara entre capítulos
+  private view: View | null = null;
+  private tween: {
+    fromPos: THREE.Vector3;
+    fromTarget: THREE.Vector3;
+    toPos: THREE.Vector3;
+    toTarget: THREE.Vector3;
+    t: number;
+    duration: number;
+  } | null = null;
+  private shipTarget: THREE.Vector3 | null = null;
 
   private raycaster = new THREE.Raycaster();
   private plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -70,7 +82,7 @@ export class Engine {
     container.appendChild(this.renderer.domElement);
 
     this.camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 200);
-    this.camera.position.copy(this.camStart); // empieza lejos; luego vuela hacia dentro
+    this.camera.position.set(0, 40, 60); // empieza lejos; el primer capítulo vuela hacia dentro
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
@@ -111,18 +123,42 @@ export class Engine {
 
   // ---------- API pública ----------
 
+  /**
+   * Lleva la cámara (y la nave) a la vista de un capítulo con una transición suave.
+   */
+  setView(view: View, duration = 2.6) {
+    this.view = view;
+    this.shipTarget = new THREE.Vector3(...view.ship);
+    if (this.piloting) return; // se aplicará al dejar de pilotar
+    this.tween = {
+      fromPos: this.camera.position.clone(),
+      fromTarget: this.controls.target.clone(),
+      toPos: new THREE.Vector3(...view.camera),
+      toTarget: new THREE.Vector3(...view.target),
+      t: 0,
+      duration,
+    };
+    // Durante la transición no se limita la distancia ni se deja orbitar
+    this.controls.enabled = false;
+    this.controls.autoRotate = false;
+    this.controls.minDistance = 0.1;
+    this.controls.maxDistance = 200;
+  }
+
   setPiloting(on: boolean) {
     if (on === this.piloting) return;
     this.piloting = on;
-    this.intro = 1;
+    this.tween = null;
     this.controls.enabled = !on;
-    this.controls.autoRotate = !on;
+    this.controls.autoRotate = false;
     if (!on) {
       this.camera.up.set(0, 1, 0);
       this.camera.fov = 60;
       this.camera.updateProjectionMatrix();
-      this.controls.target.set(0, 0, 0);
       this.mouseInside = false;
+      // Vuelve a la vista del capítulo actual
+      this.controls.target.copy(this.ship.group.position);
+      if (this.view) this.setView(this.view, 2);
     }
     this.callbacks.onPilotChange?.(on);
   }
@@ -280,6 +316,23 @@ export class Engine {
     this.mouseInside = true;
   }
 
+  private updateTween(dt: number) {
+    const tw = this.tween;
+    if (!tw) return;
+    tw.t = Math.min(tw.t + dt / tw.duration, 1);
+    const k = easeInOutCubic(tw.t);
+    this.camera.position.lerpVectors(tw.fromPos, tw.toPos, k);
+    this.controls.target.lerpVectors(tw.fromTarget, tw.toTarget, k);
+    if (tw.t >= 1) {
+      this.tween = null;
+      const v = this.view;
+      this.controls.enabled = true;
+      this.controls.autoRotate = !!v?.autoRotate;
+      this.controls.minDistance = v?.minDistance ?? 3;
+      this.controls.maxDistance = v?.maxDistance ?? 40;
+    }
+  }
+
   private loop = () => {
     this.frame = requestAnimationFrame(this.loop);
     const dt = Math.min(this.clock.getDelta(), 0.05);
@@ -292,9 +345,8 @@ export class Engine {
     u.uMouseStrength.value += ((this.mouseInside ? 1 : 0) - u.uMouseStrength.value) * 0.08;
 
     const input = this.readInput();
-    this.ship.update(dt, t, input, this.piloting);
-
     if (this.piloting) {
+      this.ship.update(dt, t, input, true);
       this.updateChaseCamera(dt);
       const speed = Math.round(this.ship.velocity.length() * 100);
       if (speed !== this.lastSpeedReport) {
@@ -302,12 +354,9 @@ export class Engine {
         this.callbacks.onSpeed?.(speed, input.turbo);
       }
     } else {
-      // Vuelo de entrada de la cámara
-      if (this.intro < 1) {
-        this.intro = Math.min(this.intro + dt / 4, 1);
-        const k = 1 - Math.pow(1 - this.intro, 3);
-        this.camera.position.lerpVectors(this.camStart, this.camEnd, k);
-      }
+      if (this.shipTarget) this.ship.autopilot(dt, t, this.shipTarget);
+      else this.ship.update(dt, t, NO_INPUT, false);
+      this.updateTween(dt);
       this.controls.update();
     }
 

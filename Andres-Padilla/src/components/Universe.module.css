@@ -34,24 +34,39 @@
   pointer-events: none;
 }
 
-.title {
+.hero {
   position: absolute;
-  left: 28px;
-  bottom: 26px;
+  top: 18%;
+  left: 0;
+  right: 0;
+  padding: 0 16px;
+  text-align: center;
   pointer-events: none;
-  text-shadow: 0 0 18px rgba(120, 160, 255, 0.6);
+  text-shadow: 0 0 24px rgba(120, 160, 255, 0.7);
+  animation: heroIn 2.5s ease 1s both;
 }
 
-.title h1 {
+@keyframes heroIn {
+  from {
+    opacity: 0;
+    letter-spacing: 0.15em;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hero h1 {
   margin: 0;
   font-weight: 200;
-  font-size: 34px;
-  letter-spacing: 0.35em;
+  font-size: clamp(36px, 7vw, 72px);
+  letter-spacing: 0.45em;
+  text-indent: 0.45em;
   text-transform: uppercase;
 }
 
-.title p {
-  margin: 6px 0 0;
+.hero p {
+  margin: 10px 0 0;
   font-size: 13px;
   opacity: 0.65;
   letter-spacing: 0.05em;
@@ -129,13 +144,11 @@
 }
 
 @media (max-width: 640px) {
-  .title {
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
+  .hero {
+    top: 14%;
   }
 
-  .title h1 {
-    font-size: 26px;
+  .hero p {
+    display: none;
   }
 }

@@ -179,6 +179,9 @@ export class Ship {
 
   private _fwd = new THREE.Vector3();
   private _tmp = new THREE.Vector3();
+  private _look = new THREE.Vector3();
+  private _m = new THREE.Matrix4();
+  private _q = new THREE.Quaternion();
 
   constructor() {
     const m = buildModel();
@@ -236,13 +239,55 @@ export class Ship {
       this.velocity.multiplyScalar(0.3);
     }
 
-    // Inclinación visual al girar + flotación en reposo
+    // Inclinación visual al girar
     this.modelo.rotation.z += (g.yaw * 0.6 - this.modelo.rotation.z) * s;
     this.modelo.rotation.x += (g.pitch * 0.15 - this.modelo.rotation.x) * s;
+
+    const thrust = Math.max(input.acel, 0) * (input.turbo ? 1.8 : 1);
+    this.effects(dt, t, thrust, piloted);
+  }
+
+  /**
+   * Vuela sola hacia `target`, frenando al llegar.
+   * Se usa para moverse entre capítulos sin que nadie la pilote.
+   */
+  autopilot(dt: number, t: number, target: THREE.Vector3) {
+    const nave = this.group;
+    const toTarget = this._tmp.subVectors(target, nave.position);
+    const dist = toTarget.length();
+
+    // Velocidad deseada: rápida lejos, suave cerca (llegada amortiguada)
+    const desiredSpeed = Math.min(dist * 1.2, 5);
+    if (dist > 0.001) toTarget.multiplyScalar(desiredSpeed / dist);
+    else toTarget.set(0, 0, 0);
+    this.velocity.lerp(toTarget, 1 - Math.exp(-dt * 2.5));
+    nave.position.addScaledVector(this.velocity, dt);
+
+    // Apunta el morro hacia donde se mueve
+    const speed = this.velocity.length();
+    if (speed > 0.2) {
+      this._look.copy(nave.position).add(this.velocity);
+      this._m.lookAt(nave.position, this._look, nave.up);
+      this._q.setFromRotationMatrix(this._m);
+      nave.quaternion.slerp(this._q, 1 - Math.exp(-dt * 4));
+    }
+
+    // Sin giros manuales: el modelo vuelve a su posición neutra
+    this.giro.yaw = this.giro.pitch = this.giro.roll = 0;
+    const s = 1 - Math.exp(-dt * 4);
+    this.modelo.rotation.z += (0 - this.modelo.rotation.z) * s;
+    this.modelo.rotation.x += (0 - this.modelo.rotation.x) * s;
+
+    this.effects(dt, t, Math.min(speed / 3, 1.6), false);
+  }
+
+  /** Llamas, luz del motor, estela y flotación. `thrust` va de 0 a ~1.8. */
+  private effects(dt: number, t: number, thrust: number, piloted: boolean) {
+    const s = 1 - Math.exp(-dt * 6);
     this.modelo.position.y = piloted ? 0 : Math.sin(t * 1.5) * 0.2;
 
     // Motores
-    const objetivo = 0.25 + Math.max(input.acel, 0) * (input.turbo ? 1.8 : 1);
+    const objetivo = 0.25 + thrust;
     this.empuje += (objetivo - this.empuje) * s;
     this.colActual
       .copy(this.colRastro)
